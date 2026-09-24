@@ -33,6 +33,7 @@ let powderStats = [
 
 // Thankfully, powders on armors give the same HP regardless of element
 let powderArmorHealth = [5, 10, 20, 30, 45, 60, 75]
+
 let powderLevelReq = [1, 5, 15, 25, 40, 55, 70]
 
 //Ordering: [weapon special name, weapon special effects, armor special name, armor special effects]
