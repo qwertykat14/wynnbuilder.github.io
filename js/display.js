@@ -313,8 +313,13 @@ function displayExpandedItem(item, parent_id) {
             let id = command;
             if (nonRolledIDs.includes(id)) {//nonRolledID & non-0/non-null/non-und ID
                 if (!item.get(id)) {
-                    if (!((item.get("crafted") && skp_order.includes(id) && (item.get("maxRolls").get(id) || item.get("minRolls").get(id))))) {
-                        continue; //what is this if statement for??
+                    let allowedNulls = false;
+                    allowedNulls ||= item.get("crafted") && skp_order.includes(id) && (item.get("maxRolls").get(id) || item.get("minRolls").get(id));
+                    allowedNulls ||= id === "basedps" && item.get("category") === "weapon" && item.get(id) === 0;
+                    if (item.get("displayName") == "Sreggad")
+                        console.log("Sreggad's allowedness: " + allowedNulls);
+                    if (!allowedNulls) {
+                        continue; 
                     }
                 }
                 if (id === "slots") {
@@ -437,7 +442,7 @@ function displayExpandedItem(item, parent_id) {
                         }
                         parent_div.appendChild(p_elem);
                     }
-                } else if (id === "durability"){
+                } else if (id === "durability" && item.get("crafted")){
                     let nonConsumables = ["relik", "wand", "bow", "spear", "dagger", "chestplate", "helmet", "leggings", "boots", "ring", "bracelet", "necklace"];
                     let dura_elem = make_elem("div", ["col"]);
                     let dura;
@@ -544,10 +549,12 @@ function displayExpandedItem(item, parent_id) {
                     let base_dps_elem = make_elem("div", ["col"]); //["left", "itemp"]);
                     let realDps = item.get("basedps");
                     if (item.get("tier") !== "Crafted") {
-                        let basicDPS = make_elem("p", ["m-0"]);
-                        basicDPS.appendChild(make_elem("span", ["base_dps", "Damage"], {textContent: "Base DPS: "}));
-                        basicDPS.appendChild(make_elem("span", [], {textContent: realDps.toFixed(1)}));
-                        base_dps_elem.appendChild(basicDPS);
+                        if (realDps > 0){
+                            let basicDPS = make_elem("p", ["m-0"]);
+                            basicDPS.appendChild(make_elem("span", ["base_dps", "Damage"], {textContent: "Base DPS: "}));
+                            basicDPS.appendChild(make_elem("span", [], {textContent: realDps.toFixed(1)}));
+                            base_dps_elem.appendChild(basicDPS);
+                        }
                         
                         if (item.get("powders").length > 0){
                             realDps = 0;
