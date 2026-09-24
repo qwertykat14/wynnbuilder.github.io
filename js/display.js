@@ -544,7 +544,11 @@ function displayExpandedItem(item, parent_id) {
                     let base_dps_elem = make_elem("div", ["col"]); //["left", "itemp"]);
                     let realDps = item.get("basedps");
                     if (item.get("tier") !== "Crafted") {
-                        base_dps_elem.appendChild(make_elem("p", ["base_dps", "m-0"], {textContent: "Base DPS: " + realDps.toFixed(1)}));
+                        let basicDPS = make_elem("p", ["m-0"]);
+                        basicDPS.appendChild(make_elem("span", ["base_dps", "Damage"], {textContent: "Base DPS: "}));
+                        basicDPS.appendChild(make_elem("span", [], {textContent: realDps.toFixed(1)}));
+                        base_dps_elem.appendChild(basicDPS);
+                        
                         if (item.get("powders").length > 0){
                             realDps = 0;
                             for (damType of ["nDam", "fDam", "wDam", "aDam", "tDam", "eDam"]){
@@ -552,17 +556,26 @@ function displayExpandedItem(item, parent_id) {
                                 elemDam.split('-').map((d) => realDps += parseInt(d));
                             }
                             realDps *= baseDamageMultiplier[attackSpeeds.indexOf(item.get("atkSpd"))]/2;
-                            base_dps_elem.appendChild(make_elem("p", ["base_dps", "m-0"], {textContent: "Pre-Powder: " + realDps.toFixed(1)}));
+
+                            let prepowderDPS = make_elem("p", ["m-0"]);
+                            prepowderDPS.appendChild(make_elem("span", ["unpowdered_dps", "Damage"], {textContent: "Pre-Powder DPS: "}));
+                            prepowderDPS.appendChild(make_elem("span", [], {textContent: realDps.toFixed(1)}));
+                            base_dps_elem.appendChild(prepowderDPS);
                         }    
                         
                         let eMaxPowder = powderStats[powderLevelReq.findLastIndex((lev) => lev <= item.get("lvl"))];
                         let powderAddedDamage = (eMaxPowder.min + eMaxPowder.max)/2 * item.get("slots");
                         powderAddedDamage *= baseDamageMultiplier[attackSpeeds.indexOf(item.get("atkSpd"))];
 
-                        base_dps_elem.appendChild(make_elem("p", ["base_dps", "m-0"], {textContent: "Post-Powder: " + (realDps + powderAddedDamage).toFixed(1)}));
+                        let postpowderDPS = make_elem("p", ["m-0"]);
+                        postpowderDPS.appendChild(make_elem("span", ["powdered_dps", "Damage"], {textContent: "Post-Powder DPS: "}));
+                        postpowderDPS.appendChild(make_elem("span", [], {textContent: (realDps + powderAddedDamage).toFixed(1)}));
+                        base_dps_elem.appendChild(postpowderDPS);
                     } else {
-                        base_dps_elem.textContent = "Base DPS: " + realDps[0].toFixed(1) + "\u279c" + realDps[1].toFixed(1);
-                        base_dps_elem.classList.add("base_dps")
+                        let basicDPS = make_elem("p", ["m-0"]);
+                        basicDPS.appendChild(make_elem("span", ["base_dps", "Damage"], {textContent: "Base DPS: "}));
+                        basicDPS.appendChild(make_elem("span", [], {textContent: realDps[0].toFixed(1) + "\u279c" + realDps[1].toFixed(1)}));
+                        base_dps_elem.appendChild(basicDPS);
                     }
                     parent_div.append(base_dps_elem);
                 } else if (skp_order.includes(id)) { //id = str, dex, int, def, or agi
@@ -609,27 +622,7 @@ function displayExpandedItem(item, parent_id) {
                         }
                     } else if (id === "hp" && item.get("tier") === "Crafted" && item.get("category") === "armor") { // crafted HP
                         idValue = item.get(id + "Low") + "-" + item.get(id);
-                    } /*else if (id === "basedps" || id === "powderdps") {
-                        if (item.get("tier") !== "Crafted"){
-                            let totalDamage = 0;
-
-                            for (const elemDam of damage_keys) {
-                                let damages = item.get(elemDam);
-                                totalDamage += (item.get("tier") !== "Crafted") ? damages[0] + damages[1] : damages[0][0] + damages[0][1] + damages[1][0] + damages[1][1];
-                            }
-                            totalDamage /= (item.get("tier") !== "Crafted") ? 2 : 4;
-
-                            if (id === "powderdps" && item.get("lvl") > 0){
-                                let eMaxPowder = powderStats[powderLevelReq.findLastIndex((lev) => lev <= item.get("lvl"))]
-                                totalDamage += (eMaxPowder.min + eMaxPowder.max)/2 * item.get("slots");
-                            }
-
-                            idValue = (totalDamage*baseDamageMultiplier[attackSpeeds.indexOf(item.get("atkSpd"))]).toFixed(1);
-                        }
-                    } else if (id === "powderdps"){//post-powder dps
-                        
-
-                    } */else {
+                    } else {
                         idValue = item.get(id)
                     }
                     
