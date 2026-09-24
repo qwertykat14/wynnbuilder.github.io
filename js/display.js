@@ -563,14 +563,17 @@ function displayExpandedItem(item, parent_id) {
                             base_dps_elem.appendChild(prepowderDPS);
                         }    
                         
-                        let eMaxPowder = powderStats[powderLevelReq.findLastIndex((lev) => lev <= item.get("lvl"))];
-                        let powderAddedDamage = (eMaxPowder.min + eMaxPowder.max)/2 * item.get("slots");
-                        powderAddedDamage *= baseDamageMultiplier[attackSpeeds.indexOf(item.get("atkSpd"))];
+                        if (item.get("slots") > 0){
+                            let eMaxPowder = powderStats[powderLevelReq.findLastIndex((lev) => lev <= item.get("lvl"))];
+                            let powderAddedDamage = (eMaxPowder.min + eMaxPowder.max)/2 * item.get("slots");
+                            powderAddedDamage *= baseDamageMultiplier[attackSpeeds.indexOf(item.get("atkSpd"))];
 
-                        let postpowderDPS = make_elem("p", ["m-0"]);
-                        postpowderDPS.appendChild(make_elem("span", ["powdered_dps", "Damage"], {textContent: "Post-Powder DPS: "}));
-                        postpowderDPS.appendChild(make_elem("span", [], {textContent: (realDps + powderAddedDamage).toFixed(1)}));
-                        base_dps_elem.appendChild(postpowderDPS);
+                            let postpowderDPS = make_elem("p", ["m-0"]);
+                            postpowderDPS.appendChild(make_elem("span", ["powdered_dps", "Damage"], {textContent: "Post-Powder DPS: "}));
+                            postpowderDPS.appendChild(make_elem("span", [], {textContent: (realDps + powderAddedDamage).toFixed(1)}));
+                            base_dps_elem.appendChild(postpowderDPS);
+                        }
+                        
                     } else {
                         let basicDPS = make_elem("p", ["m-0"]);
                         basicDPS.appendChild(make_elem("span", ["base_dps", "Damage"], {textContent: "Base DPS: "}));
