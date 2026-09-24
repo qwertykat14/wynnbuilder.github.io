@@ -133,7 +133,6 @@ let idPrefixes = {"displayName": "",
     "quest":"Quest Req: ",
     "restrict":"",
     "lore": "",
-    "basedps": "Pre-Powder DPS: ",
 };
 
 let idSuffixes = {"displayName": "",
@@ -258,7 +257,6 @@ let idSuffixes = {"displayName": "",
     "quest":"",
     "restrict":"",
     "lore": "",
-    "basedps": "",
 };
 
 //Used for item IDs and ingredient id field IDs

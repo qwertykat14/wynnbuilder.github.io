@@ -279,11 +279,13 @@ function displayExpandedItem(item, parent_id) {
     // normals just display a thing.
     item = new Map(item);   // shallow copy
     if (item.get("category") === "weapon") {
-        item.set('basedps', get_base_dps(item));
-    } else if (item.get("category") === "armor") {
-    }
+        item.set("basedps", get_base_dps(item));
+    } //else if (item.get("category") === "armor") {}
 
     let display_commands = sq2_item_display_commands;
+    if (item.get('lvl') == 0) {
+        display_commands = ["displayName", "lvl"];
+    }
     
     // Clear the parent div.
     setHTML(parent_id, "");
@@ -311,9 +313,8 @@ function displayExpandedItem(item, parent_id) {
             let id = command;
             if (nonRolledIDs.includes(id)) {//nonRolledID & non-0/non-null/non-und ID
                 if (!item.get(id)) {
-                    if (!((item.get("crafted") && skp_order.includes(id) && (item.get("maxRolls").get(id) || item.get("minRolls").get(id)))
-                        || (id === "powderdps" && item.get("category") === "weapon"))) {
-                        continue;
+                    if (!((item.get("crafted") && skp_order.includes(id) && (item.get("maxRolls").get(id) || item.get("minRolls").get(id))))) {
+                        continue; //what is this if statement for??
                     }
                 }
                 if (id === "slots") {
@@ -327,7 +328,7 @@ function displayExpandedItem(item, parent_id) {
 
                     let powders = item.get("powders");
                     for (let i = 0; i < powders.length; i++) {
-                        p_elem.appendChild(make_elem("b", [damageClasses[Math.floor(powders[i] / POWDER_TIERS) + 1] + "_powder"], {
+                        p_elem.appendChild(make_elem("b", [damageClasses[Math.floor(powders[i] / POWDER_TIERS) + 1]], {
                             textContent: ROMAN_NUMERAL_MAP.get((powders[i] % POWDER_TIERS) + 1) + " "
                         }));
                     }
@@ -463,21 +464,7 @@ function displayExpandedItem(item, parent_id) {
                     parent_div.appendChild(make_elem("div", ["col"], {
                         textContent: "Combat Level Min: " + item.get("lvlLow") + "-" + item.get(id)
                     }));
-                } /*else if (id === "powderdps") {
-                    let total_damages = item.get("basedps");
-                    let base_dps_elem = make_elem("p", ["left", "itemp"]);
-                    if (item.get("tier") === "Crafted") {
-                        let base_dps_min = total_damages[0];
-                        let base_dps_max = total_damages[1];
-                    
-                        base_dps_elem.textContent = "Base DPS: " + base_dps_min.toFixed(3) + "\u279c" + base_dps_max.toFixed(3);
-                    }
-                    else {
-                        base_dps_elem.textContent = "Base DPS: " + (total_damages.toFixed(3));
-                    }
-                    parent_div.append(make_elem("p"), base_dps_elem);
-                    last_command = id;
-                } */else if (id === "displayName") {
+                } else if (id === "displayName") {
                     let row = make_elem("div", ["row", "justify-content-center"]);
 
                     let nolink_row = make_elem("div", ["row", "justify-content-center"]);
@@ -553,6 +540,31 @@ function displayExpandedItem(item, parent_id) {
                         },
                         textContent: item.get('hash')
                     }));
+                } else if (id === "basedps") {
+                    let base_dps_elem = make_elem("div", ["col"]); //["left", "itemp"]);
+                    let realDps = item.get("basedps");
+                    if (item.get("tier") !== "Crafted") {
+                        base_dps_elem.appendChild(make_elem("p", ["base_dps", "m-0"], {textContent: "Base DPS: " + realDps.toFixed(1)}));
+                        if (item.get("powders").length > 0){
+                            realDps = 0;
+                            for (damType of ["nDam", "fDam", "wDam", "aDam", "tDam", "eDam"]){
+                                let elemDam = item.get(damType);
+                                elemDam.split('-').map((d) => realDps += parseInt(d));
+                            }
+                            realDps *= baseDamageMultiplier[attackSpeeds.indexOf(item.get("atkSpd"))]/2;
+                            base_dps_elem.appendChild(make_elem("p", ["base_dps", "m-0"], {textContent: "Pre-Powder: " + realDps.toFixed(1)}));
+                        }    
+                        
+                        let eMaxPowder = powderStats[powderLevelReq.findLastIndex((lev) => lev <= item.get("lvl"))];
+                        let powderAddedDamage = (eMaxPowder.min + eMaxPowder.max)/2 * item.get("slots");
+                        powderAddedDamage *= baseDamageMultiplier[attackSpeeds.indexOf(item.get("atkSpd"))];
+
+                        base_dps_elem.appendChild(make_elem("p", ["base_dps", "m-0"], {textContent: "Post-Powder: " + (realDps + powderAddedDamage).toFixed(1)}));
+                    } else {
+                        base_dps_elem.textContent = "Base DPS: " + realDps[0].toFixed(1) + "\u279c" + realDps[1].toFixed(1);
+                        base_dps_elem.classList.add("base_dps")
+                    }
+                    parent_div.append(base_dps_elem);
                 } else if (skp_order.includes(id)) { //id = str, dex, int, def, or agi
                     if (parent_div.nodeName === "table" && skp_order.includes(id) && item.get("tier") !== "Crafted") // this bit seems to be for the non-existant dps visualiser page, I guess it handles SP weird
                         p_elem = displayFixedID(parent_div, id, item.get(id), elemental_format);
@@ -577,27 +589,47 @@ function displayExpandedItem(item, parent_id) {
                 } else { 
                     /* "lore", "quest", "restrict", "atkSpd", "hp", 
                     "fDef", "wDef", "aDef", "tDef", "eDef",
-                    "classReq",
+                    "classReq", "lvl",
                     "strReq", "dexReq", "intReq", "defReq", "agiReq",
                     "nDam_", "fDam_", "wDam_", "aDam_", "tDam_", "eDam_",
-                    "basedps" */
+                    "basedps", "powderdps" */
 
                     let idValue;
                     
-                    if (id.endsWith('Dam_')) { //replacing damage lists with strings
+                    if (damage_keys.includes(id)) { //replacing damage lists with strings
                         let damages = item.get(id);
+                        
                         if (item.get("tier") !== "Crafted") {
                             damages = damages.map(x => Math.floor(x));
                             idValue = damages[0] + "-" + damages[1];
                         } else {
+                            console.log("no _: " + item.get(id.slice(0,4)));
                             damages = damages.map(x => x.map(y => Math.floor(y)));
                             idValue = damages[0][0] + "-" + damages[0][1] + "\u279c" + damages[1][0] + "-" + damages[1][1];
                         }
                     } else if (id === "hp" && item.get("tier") === "Crafted" && item.get("category") === "armor") { // crafted HP
-                        idValue = item.get(id + "Low") + "-" + item.get(id)
-                    } else if (id === "basedps" && item.get("tier") === "Crafted") {
-                        idValue = item.get(id)[0] + "\u279c" + item.get(id)[1]
-                    } else {
+                        idValue = item.get(id + "Low") + "-" + item.get(id);
+                    } /*else if (id === "basedps" || id === "powderdps") {
+                        if (item.get("tier") !== "Crafted"){
+                            let totalDamage = 0;
+
+                            for (const elemDam of damage_keys) {
+                                let damages = item.get(elemDam);
+                                totalDamage += (item.get("tier") !== "Crafted") ? damages[0] + damages[1] : damages[0][0] + damages[0][1] + damages[1][0] + damages[1][1];
+                            }
+                            totalDamage /= (item.get("tier") !== "Crafted") ? 2 : 4;
+
+                            if (id === "powderdps" && item.get("lvl") > 0){
+                                let eMaxPowder = powderStats[powderLevelReq.findLastIndex((lev) => lev <= item.get("lvl"))]
+                                totalDamage += (eMaxPowder.min + eMaxPowder.max)/2 * item.get("slots");
+                            }
+
+                            idValue = (totalDamage*baseDamageMultiplier[attackSpeeds.indexOf(item.get("atkSpd"))]).toFixed(1);
+                        }
+                    } else if (id === "powderdps"){//post-powder dps
+                        
+
+                    } */else {
                         idValue = item.get(id)
                     }
                     
